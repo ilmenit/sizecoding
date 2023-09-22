@@ -1,0 +1,18 @@
+[Sunrise8b]
+
+Day by day
+
+For Lovebyte party 2022, "8-16 byte intro showcase"
+Requires Atari XL/XE OS Rev2
+Code: Ilmenit / Agenda
+
+	org $22C
+loop	
+	jsr $ED8A
+	STX $D01A
+	bvc loop
+
+I never thought of doing 8 byte intro
+... but guys from Agenda started ;-)
+
+Greetings to all sizecoders!

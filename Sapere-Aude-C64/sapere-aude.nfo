@@ -1,0 +1,17 @@
+"Sapere Aude" - dare to know things
+
+My very first intro for C64. 
+
+Why C64? Well... there are not enough tiny intros for this platform!
+By Compo Rules header is not counted into the final size. Without the header
+it is 256 bytes. I used safe header "SYS2061" that has 14 bytes.
+
+The main effect code base on my previous 64 byte Atari intro "Unfolding".
+I'm not very happy with the repetitive tune but I had no time to optimize
+the code more (before the submission deadline) to squeeze there something
+more appealing.
+
+Greetings to all sizecoders!
+
+Ilmenit / Agenda
+Outline Party '2021
