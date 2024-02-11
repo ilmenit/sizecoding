@@ -1,0 +1,116 @@
+include "include/microw8-api.cwa"
+
+const ANCHORS_PER_LIMB = 3;
+const LIMBS = 6;
+const ANCHORS_TOTAL = ANCHORS_PER_LIMB * LIMBS;
+const ANCHOR_ANGLE_MIN = 0 * ANCHORS_TOTAL;
+const ANCHOR_ANGLE_RANGE = 1 * ANCHORS_TOTAL;
+const ANCHOR_ANGLE_PHASE = 2 * ANCHORS_TOTAL;
+const MUSIC_NOTES = 3 * ANCHORS_TOTAL;
+const ANCHORS = ANCHOR_ANGLE_MIN;
+const ANCHOR_CENTER = ANCHOR_ANGLE_MIN+11; // in the anchor data we have good 2 values to use for center
+
+const HORIZON = 128; 
+const LINES = 112; 
+
+global mut frame = 0;
+
+export fn upd() {
+
+	let it: i32; 
+		
+	//// music
+	if !(frame % 31) {
+		let inline channel: i32 = frame%4;
+		let inline note: i32 = ((frame+frame/992)%8)?MUSIC_NOTES; // 31*32 = 992, 31 because of %31
+		playNote(channel, note);
+	}	
+	frame = frame + 1;	
+			 
+	cls(0);
+	randomSeed(0);
+		
+	loop next_it {	
+			
+		// draw background	
+		
+		let inline px: i32 = (random()+frame*it/12)%(384); // 512
+		// the advantage of compressed cart
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);	
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);		
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);	
+		setPixel(px,it+HORIZON,it);
+		setPixel(px,it+HORIZON,it);	
+			
+		// draw horse
+		
+		let prev_x: f32;
+		let prev_y: f32;
+		
+		if (it < ANCHORS_TOTAL) {
+			
+			// time
+				
+			if !(it%ANCHORS_PER_LIMB) {
+				// half of the anchors on the left side, half on the right side
+				prev_x = (((it / (ANCHORS_TOTAL/2) ) ? (ANCHOR_CENTER))+1248) as f32 - min(frame as f32,1248 as f32); 
+				prev_y = 112_f; // CENTER_Y
+			}
+									
+			// draw anchor
+			
+			let inline c = 31_f;
+			let inline angle_phase = (it?ANCHOR_ANGLE_PHASE);						
+			let inline angle_min = ((it?ANCHOR_ANGLE_MIN) as f32);
+			let inline range = (it?ANCHOR_ANGLE_RANGE);
+			
+			// calculate move there and back
+			let inline for_abs = (fmod( ((range*(frame+angle_phase)) as f32) /c, (range + range) as f32 ) - range as f32);
+			let inline angle = (angle_min + abs(for_abs))/c;
+						
+			let inline x = prev_x + c * sin(angle); 
+			let inline y = prev_y + c * cos(angle);
+
+
+			// moon - shorter output when drawn here
+			circle(248_f,31_f,31_f,190);
+			
+			line(x,y,prev_x,prev_y,15*(it%ANCHORS_PER_LIMB));
+			
+			prev_x = x;
+			prev_y = y;
+		}
+		
+		// end loop
+		branch_if (it := it + 1) < LINES: next_it;		
+	};
+}
+
+data ANCHORS {
+	i8(	
+	///  - front leg 1 - | - front leg 2 - | ---- head ----- | -- back leg 1 - | -- back leg 2 - | ---- tail ----- |
+      // angle min 
+	     0xB0, 0x99, 0xAA, 0xB0, 0x99, 0xAA, 0x7A, 0x81, 0x99, 0xCB, 0xB6, 0x92, 0xCB, 0xB6, 0x92, 0x35, 0x20, 0x20,
+
+      // range = max-min
+	     0x18, 0x4B, 0x55, 0x18, 0x4B, 0x55, 0x08, 0x10, 0x10, 0x1B, 0x38, 0x48, 0x1B, 0x38, 0x48, 0x14, 0x18, 0x18,
+
+      // angle phase
+	     0x00, 0x00, 0x74, 0x31, 0x31, 0xA4, 0x49, 0x49, 0x35, 0xC3, 0xD0, 0x19, 0xF3, 0x00, 0x4A, 0x80, 0x89, 0x7A,
+
+	// music notes
+	53, 56, 60, 61, 63, 65, 68, 56  
+	)
+}
+
+
