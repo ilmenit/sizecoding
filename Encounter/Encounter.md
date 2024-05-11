@@ -1,4 +1,4 @@
-# Encounter - 256 bytes intro for WebAssembly MicroW8 fantasy console
+# Encounter - 256 bytes intro for WASM MicroW8 fantasy console
 
 ## What is it?
 
@@ -8,7 +8,7 @@ Attempt to bring a cinematic experience in 256 bytes.
 
 You can watch it on YouTube (recommended to select 720p60 quality) 
 
-[https://www.youtube.com/watch?v=4QY9WqbS61g](https://www.youtube.com/watch?v=4QY9WqbS61g)
+[![Watch the video](https://img.youtube.com/vi/4QY9WqbS61g/maxresdefault.jpg)](https://www.youtube.com/watch?v=4QY9WqbS61g)
 
 or click the following link if you have the FireFox browser (Chrome’s implementation of WebAssembly has much worse performance). Mobile Firefox should also work well on relatively new mobile phones. The 256 bytes are encoded in the URL:
 
@@ -16,7 +16,7 @@ or click the following link if you have the FireFox browser (Chrome’s implemen
 
 I personally love seeing creative process of the others (“making of”) and If you are interested in the steps I went through to create this intro, check the following recording:
 
-[https://youtu.be/X-g7d5NUV2s](https://youtu.be/X-g7d5NUV2s) 
+[![Watch the video](https://img.youtube.com/vi/X-g7d5NUV2s/mqdefault.jpg)](https://youtu.be/X-g7d5NUV2s)
 
 ## Why?
 
@@ -125,8 +125,8 @@ export fn upd() {
 	  line(fx, fy + perspective_height, fx, fy + prev_wave_height, (255_f*p_color) as i32);
 	  prev_wave_height = perspective_height;
 
-      branch_if (fy := fy + 1_f) < screen_height: yloop;
-    }		
+          branch_if (fy := fy + 1_f) < screen_height: yloop;
+        }		
 
 	// set ocean palette with a bit of yellow tint
 	let inline index = (fx as i32) % 128;
@@ -134,7 +134,7 @@ export fn upd() {
 	i!0x13000 =  0x030200*(index/4);
 	i!0x13200 =  0x020304*(index/2)+0x604000;
 
-    branch_if (fx := fx + 1_f) < screen_width: xloop;	
-  }  
-}
+        branch_if (fx := fx + 1_f) < screen_width: xloop;	
+  } // yloop
+} // xloop
 ```
