@@ -63,7 +63,7 @@ export fn upd() {
 
   loop xloop {
   
-    let fy: f32 = 0_f; 		
+    let fy: f32 = 0_f;      
     loop yloop {
 
       // define the vanishing point coordinates
@@ -73,68 +73,68 @@ export fn upd() {
       // define the distance
       let inline d: f32 = 160_f; 
 
-	  // calculate the distance from the center
-	  let inline cx: f32 = vp_x - fx; 
-	  let inline cy: f32 = vp_y - fy; 
-
-	  // calculate the angle mapping
-	  let inline nx: f32 = cx / 2_f / cy; 
-	  let inline ny: f32 =  d * 2_f / cy;
-
-	  // A variable to store the total height
-	  let wave_height = cos(fx*fy)*max(0_f,t-80_f); // matrix-like effect at the end
-
-	  // Calculate the height of the superposition of waves at a given position and time
-	  let i: f32=0_f;
-
-	  // select either water or sky
-	  let inline iterations: f32 = select(fy<120_f,4_f,16_f);
-
-	  loop wave_iterations {	
-	  
-		let inline amplitude = i/40_f;
-		let inline frequency = 2_f+cos(i);
-		let inline phase = cos(i*i);
-		// dx and dy are the components of the direction of the wave
-		let inline dx = sin(i*i); // serves as PRNG
-		let inline dy = cos(i*i*i); // serves as PRNG
-		let inline time_shift = t/14_f*iterations;
-
-		wave_height -= amplitude * (abs(sin(frequency * (ny * dy + nx * dx) + time_shift + phase)));		
-
-		branch_if (i := i + 1_f) < iterations: wave_iterations; 
-	  }
-	  let inline dist = sqrt(cx*cx + cy*cy); 	
-  	  
-	  // how big are waves in time
-	  let inline wave_scale = min(2_f*t,40_f); 	  	  
-	  let inline perspective_height = wave_height * wave_scale * cy / d;   
-
-	  // minimalistic water reflection+refraction
-	  let inline h_color: f32 = 1_f-abs(perspective_height-prev_wave_height)/6_f;	   
-
-	  // alien blob/ship
-	  let inline radius = min(2_f*t-70_f,50_f); 
-	  let inline blob_color = dist/radius;
-	  let inline color: f32 = select(dist<radius,blob_color,h_color);
-	  
-	  // add cinematic vignette effect (dist) with a bit of fresnel effect (cy)
-	  let inline p_color = max(0_f,color+(cy-dist)/512_f);
-
-	  // draw lines also for blob to imitate reflection
-	  line(fx, fy + perspective_height, fx, fy + prev_wave_height, (255_f*p_color) as i32);
-	  prev_wave_height = perspective_height;
-
-          branch_if (fy := fy + 1_f) < screen_height: yloop;
-        }		
-
-	// set ocean palette with a bit of yellow tint
-	let inline index = (fx as i32) % 128;
-	let inline i = 4*index;
-	i!0x13000 =  0x030200*(index/4);
-	i!0x13200 =  0x020304*(index/2)+0x604000;
-
-        branch_if (fx := fx + 1_f) < screen_width: xloop;	
-  } // yloop
-} // xloop
+      // calculate the distance from the center
+      let inline cx: f32 = vp_x - fx; 
+      let inline cy: f32 = vp_y - fy; 
+    
+      // calculate the angle mapping
+      let inline nx: f32 = cx / 2_f / cy; 
+      let inline ny: f32 =  d * 2_f / cy;
+    
+      // A variable to store the total height
+      let wave_height = cos(fx*fy)*max(0_f,t-80_f); // matrix-like effect at the end
+    
+      // Calculate the height of the superposition of waves at a given position and time
+      let i: f32=0_f;
+    
+      // select either water or sky
+      let inline iterations: f32 = select(fy<120_f,4_f,16_f);
+    
+      loop wave_iterations {    
+      
+        let inline amplitude = i/40_f;
+        let inline frequency = 2_f+cos(i);
+        let inline phase = cos(i*i);
+        // dx and dy are the components of the direction of the wave
+        let inline dx = sin(i*i); // serves as PRNG
+        let inline dy = cos(i*i*i); // serves as PRNG
+        let inline time_shift = t/14_f*iterations;
+    
+        wave_height -= amplitude * (abs(sin(frequency * (ny * dy + nx * dx) + time_shift + phase)));        
+    
+        branch_if (i := i + 1_f) < iterations: wave_iterations; 
+      }
+      let inline dist = sqrt(cx*cx + cy*cy);    
+      
+      // how big are waves in time
+      let inline wave_scale = min(2_f*t,40_f);        
+      let inline perspective_height = wave_height * wave_scale * cy / d;   
+    
+      // minimalistic water reflection+refraction
+      let inline h_color: f32 = 1_f-abs(perspective_height-prev_wave_height)/6_f;      
+    
+      // alien blob/ship
+      let inline radius = min(2_f*t-70_f,50_f); 
+      let inline blob_color = dist/radius;
+      let inline color: f32 = select(dist<radius,blob_color,h_color);
+      
+      // add cinematic vignette effect (dist) with a bit of fresnel effect (cy)
+      let inline p_color = max(0_f,color+(cy-dist)/512_f);
+    
+      // draw lines also for blob to imitate reflection
+      line(fx, fy + perspective_height, fx, fy + prev_wave_height, (255_f*p_color) as i32);
+      prev_wave_height = perspective_height;
+    
+      branch_if (fy := fy + 1_f) < screen_height: yloop;
+    }   
+    
+    // set ocean palette with a bit of yellow tint
+    let inline index = (fx as i32) % 128;
+    let inline i = 4*index;
+    i!0x13000 =  0x030200*(index/4);
+    i!0x13200 =  0x020304*(index/2)+0x604000;
+    
+    branch_if (fx := fx + 1_f) < screen_width: xloop;   
+  } 
+}
 ```
