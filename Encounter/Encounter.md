@@ -35,7 +35,7 @@ MicroW8 has capabilities close to DOS-era machines (16 bit real-mode x86 with FP
 * Screen: 320x240, 256 colors, 60Hz, customizable palette.
 * Memory: 256KB
 
-but with a MUCH faster CPU powered by WebAssembly (therefore more like running nowadays FreeDOS [https://www.freedos.org](https://www.freedos.org) on a modern PC).
+but with a MUCH faster CPU powered by WebAssembly (therefore more like running nowadays [FreeDOS](https://www.freedos.org) on a modern PC).
 
 Important note: the compiled “virtual cartridge” is compressed, therefore 256 bytes is not equal to 256 bytes of WASM code. The WASM code needs to be interconnected with the MicroW8 platform and the compression negates this overhead, leading to (according to sizecoding gurus) “code density” in 256 bytes similar to uncompressed x86/FPU code. The compression brings more benefits the bigger the code/data is, however in x86 you can also make tiny code decompressors, that you cannot do easily in WebAssembly due to executable code space separation, therefore for size-constrained programming DOS with x86 and [all the tricks it offers](http://www.sizecoding.org/wiki/DOS) can still be the king.
 
@@ -45,7 +45,7 @@ WebAssembly is a stack-based virtual machine, which makes it easy to represent a
 
 CurlyWAS has ability to use keywords like “inline” (expression is evaluated every time, works similarly to C’s #define), or “lazy” (which uses the local.tee instruction which combines local.set and local.get and therefore saves on bytes). 
 
-In WebAssembly the 32bit integers are encoded in LEB128 format [https://en.wikipedia.org/wiki/LEB128](https://en.wikipedia.org/wiki/LEB128) and CurlyWAS has sugar syntax of adding _f to a constant to convert integer to 32bit float:
+In WebAssembly the 32bit integers are encoded in [LEB128 format](https://en.wikipedia.org/wiki/LEB128) and CurlyWAS has sugar syntax of adding _f to a constant to convert integer to 32bit float:
 
 (320_f) is equal to (320 as f32)
 
