@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MicroW8 Wave Effect</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="screen" width="320" height="240"></canvas>
+    <script>
+        const canvas = document.getElementById('screen');
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.createImageData(320, 240);
+        const data = imageData.data;
+        
+        // Initialize palette (256 colors)
+        const palette = new Uint32Array(256);
+        
+        let startTime = performance.now();
+        
+        function time() {
+            return (performance.now() - startTime) / 1000;
+        }
+        
+        function randomf() {
+            return Math.random();
+        }
+        
+        function updatePalette() {
+            // First part: gradual blue increase (0-127)
+            for (let i = 0; i < 32; i++) {
+                const step = i * 0x203;  // Each color increases by 0x203
+                // Repeat each color 4 times as in original palette
+                for (let j = 0; j < 4; j++) {
+                    const idx = i * 4 + j;
+                    palette[idx] = 
+                        ((step & 0xFF0000) << 8) |    // R
+                        ((step & 0x00FF00) << 8) |    // G
+                        ((step & 0x0000FF) << 8) |    // B
+                        0xFF;                         // A
+                }
+            }
+
+            // Get the last color of the first half
+            const lastStep = 31 * 0x203;
+            const lastR = (lastStep & 0xFF0000) >> 16;
+            const lastG = (lastStep & 0x00FF00) >> 8;
+            const lastB = lastStep & 0x0000FF;
+
+            // Second part: smooth transition from last blue to yellowish white (128-255)
+            for (let i = 128; i < 256; i++) {
+                const t = (i - 128) / 127;  // Transition factor 0->1
+                const r = Math.floor(lastR + t * (0xFF - lastR));  // Transition to full red
+                const g = Math.floor(lastG + t * (0xFF - lastG));  // Transition to full green
+                const b = Math.floor(lastB + t * (0xE0 - lastB));  // Transition to slightly less blue
+                const color = (r << 16) | (g << 8) | b;
+                palette[i] = 
+                    ((color & 0xFF0000) << 8) |    // R
+                    ((color & 0x00FF00) << 8) |    // G
+                    ((color & 0x0000FF) << 8) |    // B
+                    0xFF;                          // A
+            }
+        }
+        
+        function line(x, y1, y2, color) {
+            const xx = Math.floor(x);
+            const startY = Math.floor(Math.min(y1, y2));
+            const endY = Math.ceil(Math.max(y1, y2));
+            
+            if (xx < 0 || xx >= 320) return;
+            
+            for (let y = startY; y <= endY; y++) {
+                if (y >= 0 && y < 240) {
+                    const idx = (y * 320 + xx) * 4;
+                    const paletteColor = palette[color & 0xFF];
+                    data[idx] = (paletteColor >> 24) & 0xFF;     // R
+                    data[idx + 1] = (paletteColor >> 16) & 0xFF; // G
+                    data[idx + 2] = (paletteColor >> 8) & 0xFF;  // B
+                    data[idx + 3] = paletteColor & 0xFF;         // A
+                }
+            }
+        }
+        
+        function update() {
+            const t = time();
+            updatePalette(); // Update entire palette once per frame
+            
+            for (let fx = 0; fx < 320; fx++) {
+                let prev_wave_height = 0;
+                
+                for (let fy = 0; fy < 240; fy++) {
+                    const vp_x = 160;
+                    const vp_y = 120.5;
+                    const d = 160;
+                    
+                    const cx = vp_x - fx;
+                    const cy = vp_y - fy;
+                    
+                    const nx = cx / cy / 2;
+                    const ny = 320 / cy;
+                    
+                    const dist = Math.sqrt(cx*cx + cy*cy);
+                    let wave_height = Math.sin(40*dist) * Math.max(0, t/2-40);
+                    
+                    const iterations = fy < 120 ? 4 : 16;
+                    for (let i = 0; i < iterations; i++) {
+                        const amplitude = i/40;
+                        const frequency = 2 + Math.cos(i);
+                        const dx = Math.sin(i*i);
+                        const dy = Math.cos(i*i*i);
+                        const time_shift = t/14*iterations;
+                        wave_height -= amplitude * Math.abs(Math.sin((frequency * (ny * dy + nx * dx)) + time_shift));
+                    }
+                    
+                    const wave_scale = Math.min(2*t, 40);
+                    const perspective_height = wave_height * wave_scale * cy / d;
+                    
+                    const h_color = 1 - Math.abs(perspective_height - prev_wave_height)/6;
+                    const radius = Math.min(2*t-70, 50);
+                    const blob_color = dist/radius;
+                    const color = dist < radius ? blob_color : h_color;
+                    
+                    const p_color = Math.max(0, color + (cy - dist)/512);
+                    const final_color = Math.min(255, Math.floor(250 * p_color + 6 * randomf()));
+                    
+                    line(
+                        fx,
+                        fy + Math.floor(perspective_height),
+                        fy + Math.floor(prev_wave_height),
+                        final_color
+                    );
+                    
+                    prev_wave_height = perspective_height;
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            requestAnimationFrame(update);
+        }
+        
+        // Start the animation
+        update();
+    </script>
+</body>
+</html>
