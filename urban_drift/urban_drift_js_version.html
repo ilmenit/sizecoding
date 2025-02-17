@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Urban Drift</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            image-rendering: pixelated;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        let ctx, imageData;
+
+        function resizeCanvas() {
+            const windowRatio = window.innerWidth / window.innerHeight;
+            const targetRatio = 4/3;
+            
+            let width, height;
+            if (windowRatio > targetRatio) {
+                // Window is wider than target ratio
+                height = window.innerHeight;
+                width = height * targetRatio;
+            } else {
+                // Window is taller than target ratio
+                width = window.innerWidth;
+                height = width / targetRatio;
+            }
+            
+            // Set canvas size to maintain pixel ratio
+            canvas.width = 320;
+            canvas.height = 240;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            
+            ctx = canvas.getContext('2d');
+            imageData = ctx.createImageData(320, 240);
+        }
+
+        // Initial setup
+        resizeCanvas();
+
+        // Handle window resizing
+        window.addEventListener('resize', resizeCanvas);
+
+        const EPSILON = 0.013671875;
+        const BUILDING_SIZE = 0.4375;
+        const RAYCAST_STEPS = 64;
+        const ALMOST_0_9 = 0.875;
+
+        function abs(x) {
+            return Math.fround(Math.abs(Math.fround(x)));
+        }
+
+        function min(a, b) {
+            return Math.min(a, b);
+        }
+
+        function max(a, b) {
+            return Math.max(a, b);
+        }
+
+        function sin(x) {
+            return Math.sin(x);
+        }
+
+        function cos(x) {
+            return Math.cos(x);
+        }
+
+        function sqrt(x) {
+            return Math.sqrt(x);
+        }
+
+        function fmod(x, y) {
+            return x - Math.floor(x / y) * y;
+        }
+
+        function time() {
+            return performance.now() / 1000;
+        }
+
+        function sdf(px, py, pz) {
+            const gx = Math.floor(px);
+            const gz = Math.floor(pz);
+            let d = py;
+            
+            for (let i = 0; i < 9; i++) {
+                const dx = Math.floor(i / 3) - 1;
+                const dz = (i % 3) - 1;
+
+                const gxDx = gx + dx;
+                const pxOffset = px - (gxDx + 0.5);
+                const absX = abs(pxOffset) - BUILDING_SIZE;
+
+                const h2 = Math.fround(((gxDx ^ (gz + dz)) & 7) / 4);
+                const pzOffset = pz - ((gz + dz) + 0.5);
+                const absZ = abs(pzOffset) - BUILDING_SIZE;
+                const absY = abs(py - h2) - h2;
+
+                d = min(d, max(absX, max(absY, absZ)));
+            }
+            return d;
+        }
+
+        function raycast(px, py, pz, rdX, rdY, rdZ) {
+            let dist = 0;
+            const day_time = abs(fmod(time()/64, 2)-1);
+
+            for (let step = 0; step < RAYCAST_STEPS; step++) {
+                let h = sdf(px, py, pz);
+
+                if (h < EPSILON) {
+                    const nx = sdf(px + EPSILON, py, pz) - h;
+                    const ny = sdf(px, py + EPSILON, pz) - h;
+                    const nz = sdf(px, py, pz + EPSILON) - h;
+                    const nl = 1.0078125 / sqrt(nx * nx + ny * ny + nz * nz);
+
+                    let light = (nx + ny * day_time - nz * day_time) * nl;
+
+                    // Soft shadows
+                    let t = 0.1248779296875;
+                    
+                    shadow_calc: {
+                        for (let j = 0; j < 16; j++) {
+                            const sh = sdf(
+                                px + t,
+                                py + t * day_time,
+                                pz - t * day_time
+                            );
+                            if (sh < EPSILON) {
+                                light /= 8;
+                                break shadow_calc;
+                            }
+                            light = min(light, sh * (8/t));
+                            t = t + sh;
+                        }
+                    }
+
+                    // Window reflections
+                    if (abs(ny * nl) < EPSILON) {
+                        const w = abs(nx) > abs(nz) ? pz : px;
+                        const is_window_frame = abs(fmod(4 * w, 1)) <= ALMOST_0_9;
+                        const is_window_frame2 = abs(fmod(4 * py, 1)) <= ALMOST_0_9;
+                        
+                        if (is_window_frame && is_window_frame2) {
+                            const ndotrd = 2 * (nx * rdX + ny * rdY + nz * rdZ) * nl * nl;
+                            const rrX = rdX - ndotrd * nx;
+                            const rrY = rdY - ndotrd * ny;
+                            const rrZ = rdZ - ndotrd * nz;
+
+                            const reflLight = raycast(
+                                px + rrX * EPSILON,
+                                py + rrY * EPSILON,
+                                pz + rrZ * EPSILON,
+                                rrX, rrY, rrZ
+                            );
+
+                            const wx = Math.floor(w * 16);
+                            const wy = Math.floor(py * 16);
+
+                            if (((wx ^ wy ^ Math.floor(wx / 2)) & 28) === 0) {
+                                // bright windows
+                                light = 3 + (light - 3) * day_time;
+                            }
+                            light = min((light + reflLight) * 0.5, 1);
+                        }
+                    }
+
+                    // Add distance fog
+                    light += (day_time - light) / 8 * dist;
+                    return min(max(light, 0), ALMOST_0_9);
+                }
+
+                h /= 4;
+                px += rdX * h;
+                py += rdY * h;
+                pz += rdZ * h;
+                dist += h;
+            }
+            return day_time;
+        }
+
+        function render() {
+            const angle = time() / 16;
+            const s = sin(angle);
+            const c = cos(angle);
+
+            for (let y = 0; y < 240; y++) {
+                const v = (100 - y) / 100;
+
+                for (let x = 0; x < 320; x++) {
+                    const u = (160 - x) / 100;
+                    const rdX = -c * u - 2 * s;
+                    const rdY = v - 0.7;
+                    const rdZ = s * u - 2 * c;
+
+                    const light = raycast(
+                        4 * s, 
+                        4 - abs(fmod(time()/64, 2)-1), 
+                        4 * c, 
+                        rdX, rdY, rdZ
+                    );
+                    const color = Math.floor(240 * light);
+
+                    const idx = (y * 320 + x) * 4;
+                    imageData.data[idx] = color;
+                    imageData.data[idx + 1] = color;
+                    imageData.data[idx + 2] = color;
+                    imageData.data[idx + 3] = 255;
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            requestAnimationFrame(render);
+        }
+
+        render();
+    </script>
+</body>
+</html>
