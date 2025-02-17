@@ -1,0 +1,150 @@
+include "include/microw8-api.cwa"
+
+//const EPSILON: f32 = 0.00009765625;
+//const EPSILON: f32 = 0.0048828125;
+//const EPSILON: f32 = 0.009765625;
+const EPSILON: f32 = 0.013671875;
+const BUILDING_SIZE: f32 = 0.4375;
+const RAYCAST_STEPS: i32 = 64;
+
+const ALMOST_0_9 = 0.875;
+
+fn sdf(px: f32, py: f32, pz: f32) -> f32 {
+    let inline gx = px as i32;
+    let inline gz = pz as i32;
+    let d = py;
+    let i: i32 = 0;
+    loop grid_loop {
+        let inline dx = (i / 3) - 1;
+        let inline dz = (i % 3) - 1;
+
+        let gxDx = gx + dx;
+        let inline pxOffset = px - ((gxDx as f32) + 0.5);
+        let inline absX = abs(pxOffset) - BUILDING_SIZE;
+
+        let h2 = (((gxDx ^ (gz + dz)) & 7) as f32) / 4_f;
+        let inline pzOffset = pz - ((gz + dz) as f32 + 0.5);
+        let inline absZ = abs(pzOffset) - BUILDING_SIZE;
+        let inline absY = abs(py - h2) - h2;
+
+        d = min(d, max(absX, max(absY, absZ)));
+
+        branch_if (i := i + 1) < 9: grid_loop;
+    }
+    d
+}
+
+fn raycast(px: f32, py: f32, pz: f32, rdX: f32, rdY: f32, rdZ: f32) -> f32 {
+    let dist: f32;
+    let step: i32;
+
+	let day_time: f32 = abs(fmod(time()/64_f,2_f)-1_f);
+
+    loop raycast_loop {
+        let h = sdf(px, py, pz);
+
+        if h < EPSILON {
+
+            let nx = sdf(px + EPSILON, py, pz) - h;
+            let ny = sdf(px, py + EPSILON, pz) - h;
+            let nz = sdf(px, py, pz + EPSILON) - h;
+            let nl = 1.0078125 / sqrt(nx * nx + ny * ny + nz * nz);
+
+            let light = (nx + ny * day_time - nz * day_time) * nl;
+
+            // Soft shadows
+            let t: f32 = 0.1248779296875;
+            let j: i32 = 0;
+            block shadow_calc {
+                loop shadow_loop {
+                    let sh = sdf(
+                        px + t,
+                        py + t * day_time,
+                        pz - t * day_time
+                    );
+                    if sh < EPSILON {
+                        light /= 8_f;
+
+                        branch shadow_calc;
+                    }
+                    light = min(light, sh * (8_f/t));
+                    t = t + sh;
+                    branch_if (j := j + 1) < 16: shadow_loop;
+                }
+            }
+
+			// Window reflections
+			if abs(ny * nl) < EPSILON {
+				let inline w = if abs(nx) > abs(nz) { pz } else { px };
+				let inline is_window_frame = abs(fmod(4_f * w, 1_f)) <= ALMOST_0_9;
+				let inline is_window_frame2 = abs(fmod(4_f * py, 1_f)) <= ALMOST_0_9;
+				if (is_window_frame & is_window_frame2) {
+					let lazy ndotrd = 2_f * (nx * rdX + ny * rdY + nz * rdZ) * nl * nl;
+					let lazy rrX = rdX - ndotrd * nx;
+					let lazy rrY = rdY - ndotrd * ny;
+					let lazy rrZ = rdZ - ndotrd * nz;
+
+					let inline reflLight = raycast(
+						px + rrX * EPSILON,
+						py + rrY * EPSILON,
+						pz + rrZ * EPSILON,
+						rrX, rrY, rrZ
+					);
+
+					let inline wx = (w * 16_f) as i32;
+					let inline wy = (py * 16_f) as i32;
+
+					if (wx ^ wy ^ (wx / 2) & 28) == 0 {
+						// bright windows
+						light =  3_f + (light - 3_f) * day_time;
+					}
+					// min to avoid overflow with bright windows
+					light = min((light + reflLight) * 0.5,1_f);
+				}
+			}
+
+            // Add distance fog
+            light += (day_time - light) / 8_f * dist;
+
+			return min(max(light,0_f),ALMOST_0_9);
+        }
+
+		h /= 4_f;
+		px += rdX * h;
+        py += rdY * h;
+        pz += rdZ * h;
+        dist += h;
+        branch_if (step := step + 1) < RAYCAST_STEPS: raycast_loop;
+    }	
+	day_time
+}
+
+export fn upd() {
+    // Camera setup	
+    let inline angle = time() / 16_f;
+    let inline s = sin(angle);
+    let inline c = cos(angle);
+
+    let y: i32;
+    loop y_loop {
+        let inline v = (100_f - y as f32) / 100_f;
+        let x: i32 = 0;
+
+		// set palette
+		let inline i = 4*y;
+		i!0x13000 =  0x010101*y;		
+
+        loop x_loop {
+            let lazy u = (160_f - x as f32) / 100_f;
+            let inline rdX = -c * u - 2_f * s;
+            let inline rdY = v - 0.7;
+            let inline rdZ = s * u - 2_f * c;
+
+            let light = raycast(4_f * s, 4_f-abs(fmod(time()/64_f,2_f)-1_f), 4_f * c, rdX, rdY, rdZ);
+			let inline color = (240_f * light) as i32;
+            setPixel(x, y, color);
+            branch_if (x := x + 1) < 320: x_loop;
+        }
+        branch_if (y := y + 1) < 240: y_loop;
+    }
+}
