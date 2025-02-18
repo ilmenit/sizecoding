@@ -1,12 +1,12 @@
 // Math utility functions
 const MathUtils = {
-    abs: (x) => Math.fround(Math.abs(Math.fround(x))),
+    abs: Math.abs, 
     min: Math.min,
     max: Math.max,
     sin: Math.sin,
     cos: Math.cos,
     sqrt: Math.sqrt,
-    fmod: (x, y) => x - Math.floor(x / y) * y,
+    fmod: (x, y) => x % y,
     time: () => performance.now() / 1000
 };
 
