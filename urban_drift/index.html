@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Urban Drift</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="controls">
+        <div class="control-group">
+            <h3>Resolution & Quality</h3>
+            <div class="control-row">
+                <label>Resolution</label>
+                <select id="resolution">
+                    <option value="160x120">160x120</option>
+                    <option value="320x240" selected>320x240</option>
+                    <option value="640x480">640x480</option>
+                    <option value="1024x960">1024x960</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <label>Update Pattern</label>
+                <select id="bayer-pattern">
+                    <option value="1">Every pixel</option>
+                    <option value="2">1/2 pixels</option>
+                    <option value="4">1/4 pixels</option>
+                    <option value="8">1/8 pixels</option>
+                    <option value="16" selected>1/16 pixels</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Day/Night Cycle</h3>
+            <div class="control-row">
+                <label>Auto-cycle</label>
+                <input type="checkbox" id="auto-daytime" checked>
+            </div>
+            <div class="control-row">
+                <label>Time</label>
+                <input type="range" id="day-time" min="0" max="100" value="50">
+                <span class="value-display">50%</span>
+            </div>
+            <div class="control-row">
+                <label>Cycle Speed</label>
+                <input type="range" id="day-speed" min="1" max="128" value="64">
+                <span class="value-display">64</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Camera Movement</h3>
+            <div class="control-row">
+                <label>Auto-rotate</label>
+                <input type="checkbox" id="auto-rotate" checked>
+            </div>
+            <div class="control-row">
+                <label>Angle</label>
+                <input type="range" id="rotation-angle" min="0" max="360" value="0">
+                <span class="value-display">0°</span>
+            </div>
+            <div class="control-row">
+                <label>Speed</label>
+                <input type="range" id="rotation-speed" min="0" max="32" value="16">
+                <span class="value-display">16</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Building Parameters</h3>
+            <div class="control-row">
+                <label>Surface Detail</label>
+                <input type="range" id="epsilon" min="1" max="100" value="14">
+                <span class="value-display">0.014</span>
+            </div>
+            <div class="control-row">
+                <label>Building Size</label>
+                <input type="range" id="building-size" min="10" max="90" value="44">
+                <span class="value-display">0.44</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Reflections</h3>
+            <div class="control-row">
+                <label>Enabled</label>
+                <input type="checkbox" id="reflections-enabled" checked>
+            </div>
+            <div class="control-row">
+                <label>Infinite</label>
+                <input type="checkbox" id="infinite-reflections" checked>
+            </div>
+            <div class="control-row">
+                <label>Max Depth</label>
+                <input type="range" id="reflection-depth" min="1" max="64" value="8">
+                <span class="value-display">8</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Windows</h3>
+            <div class="control-row">
+                <label>Width</label>
+                <input type="range" id="window-size-h" min="50" max="95" value="88">
+                <span class="value-display">0.88</span>
+            </div>
+            <div class="control-row">
+                <label>Height</label>
+                <input type="range" id="window-size-v" min="50" max="95" value="88">
+                <span class="value-display">0.88</span>
+            </div>
+            <div class="control-row">
+                <label>Lights</label>
+                <input type="checkbox" id="window-lights-enabled" checked>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Shadows</h3>
+            <div class="control-row">
+                <label>Enabled</label>
+                <input type="checkbox" id="shadows-enabled" checked>
+            </div>
+            <div class="control-row">
+                <label>Quality</label>
+                <input type="range" id="shadow-quality" min="4" max="32" value="16">
+                <span class="value-display">16</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Ray Casting</h3>
+            <div class="control-row">
+                <label>Distance</label>
+                <input type="range" id="raycast-steps" min="4" max="128" value="64">
+                <span class="value-display">64</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
