@@ -18,6 +18,10 @@ I personally love seeing creative process of the others (“making of”) and If
 
 [![Watch the video](https://img.youtube.com/vi/X-g7d5NUV2s/mqdefault.jpg)](https://youtu.be/X-g7d5NUV2s)
 
+## Play
+
+I added also a **[JavaScript playground](https://ilmenit.github.io/sizecoding/Encounter/index.html)** so you can play with different parameters of this effect:
+
 ## Why?
 
 I love intellectual challenges, art, computer science and in May 2024 there was another [Outline demoscene party](https://outlinedemoparty.nl) with size-coding competition. I did some 256 byte intros in the past (like drawing **[Mona Lisa](https://www.pouet.net/prod.php?which=62917)** for 6502 8bit Atari, ported to a [crazy number of platforms](https://codegolf.stackexchange.com/questions/126738/lets-draw-mona-lisa) or **[Thrive](https://www.pouet.net/prod.php?which=91578)** for TIC-80 showing a [growing tree through the seasons](https://youtu.be/qU5EGLvFXd8)), so I decided to join the competition once again.
