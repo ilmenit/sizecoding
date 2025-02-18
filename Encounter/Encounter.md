@@ -20,7 +20,9 @@ I personally love seeing creative process of the others (“making of”) and If
 
 ## Play
 
-I added also a **[JavaScript playground](https://ilmenit.github.io/sizecoding/Encounter/index.html)** so you can play with different parameters of this effect:
+I added also a **[JavaScript playground](https://ilmenit.github.io/sizecoding/Encounter/index.html)** so you can play with different parameters of this effect.
+
+[![Enter playground](https://github.com/ilmenit/sizecoding/blob/f95de6823d48975adc001a81a289e7a960ac2bfe/Encounter/playground.png)](https://ilmenit.github.io/sizecoding/Encounter/index.html)
 
 ## Why?
 
